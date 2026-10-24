@@ -75,6 +75,11 @@ def create_app(test_config=None):
                            "sku": row.sku, "unitPrice": float(row.unit_price),
                            "quantity": row.quantity} for row in order.items]}
 
+    @app.get("/")
+    def root():
+        return jsonify({"status": "ok", "service": "StockFlow API", "version": "1.0.0"})
+
+    @app.get("/health")
     @app.get("/api/health")
     def health():
         return jsonify({"status": "ok", "service": "StockFlow API"})
