@@ -1,4 +1,5 @@
-const API_ROOT = import.meta.env.VITE_API_URL || ''
+const rawApiRoot = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || '').replace(/\/+$/, '')
+export const API_ROOT = rawApiRoot.endsWith('/api') ? rawApiRoot.slice(0, -4) : rawApiRoot
 
 export async function api(path, options = {}) {
   const token = localStorage.getItem('stockflow-token')

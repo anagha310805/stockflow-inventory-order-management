@@ -132,11 +132,11 @@ stock-flow/
    MYSQL_HOST=127.0.0.1
    MYSQL_PORT=3306
    MYSQL_DATABASE=stockflow
-   MYSQL_USER=root
+   MYSQL_USER=your-mysql-user
    MYSQL_PASSWORD=your-mysql-password
-   INITIAL_ADMIN_PASSWORD=AdminPass@123
-   INITIAL_STAFF_PASSWORD=StaffPass@123
-   DEMO_PASSWORD=DemoPass@123
+   INITIAL_ADMIN_PASSWORD=choose-a-strong-admin-password
+   INITIAL_STAFF_PASSWORD=choose-a-strong-staff-password
+   DEMO_PASSWORD=choose-a-strong-demo-password
    ```
 
 5. Seed the database with sample products, categories, suppliers, and initial users:

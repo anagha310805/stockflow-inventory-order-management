@@ -3,7 +3,7 @@ import {
   ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Download, FileText, Package, Plus,
   Search, Users, X,
 } from 'lucide-react'
-import { api, money } from './api.js'
+import { api, money, API_ROOT } from './api.js'
 
 const empty = { products: [], categories: [], suppliers: [], customers: [], orders: [], movements: [] }
 
@@ -187,7 +187,7 @@ export default function StaffPages({ page, user, onNavigate, onBack, onUserUpdat
       if (from) params.set('from', from)
       if (to) params.set('to', to)
       if (search) params.set('q', search)
-      const response = await fetch(`/api/reports/orders.csv?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+      const response = await fetch(`${API_ROOT}/api/reports/orders.csv?${params}`, { headers: { Authorization: `Bearer ${token}` } })
       if (!response.ok) throw new Error('CSV export failed.')
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)

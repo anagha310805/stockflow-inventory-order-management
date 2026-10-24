@@ -10,6 +10,8 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 def database_url():
     configured_url = os.getenv("DATABASE_URL")
     if configured_url:
+        if configured_url.startswith("mysql://"):
+            return configured_url.replace("mysql://", "mysql+pymysql://", 1)
         return configured_url
     username = os.getenv("MYSQL_USER")
     password = os.getenv("MYSQL_PASSWORD")
@@ -31,4 +33,11 @@ class Config:
     SQLALCHEMY_DATABASE_URI = database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TOKEN_MAX_AGE = int(os.getenv("TOKEN_MAX_AGE", "43200"))
-    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+    CORS_ORIGINS = [
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:5173,http://localhost:5177,http://127.0.0.1:5173,http://127.0.0.1:5177",
+        ).split(",")
+        if origin.strip()
+    ]
