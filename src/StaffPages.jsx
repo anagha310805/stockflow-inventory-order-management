@@ -262,7 +262,7 @@ export default function StaffPages({ page, user, onNavigate, onBack, onUserUpdat
   if (page === 'inventory') return <section className="workspace-page">
     <PageTitle eyebrow="STOCK CONTROL" title="Inventory" subtitle="Every adjustment is recorded in the movement history." loading={loading} onBack={onBack} />
     <section className="panel staff-table-panel"><div className="staff-table-scroll"><table className="staff-table"><thead><tr><th>Product</th><th>SKU</th><th>Available</th><th>Threshold</th><th>Level</th><th>Adjust stock</th></tr></thead><tbody>
-      {data.products.map((item) => <tr key={item.id}><td><b>{item.name}</b></td><td>{item.sku}</td><td>{item.stock}</td><td>{item.threshold}</td><td><span className={`table-status ${item.stock === 0 ? 'inactive' : item.stock <= item.threshold ? 'warning' : 'active'}`}>{item.stock === 0 ? 'Out of stock' : item.stock <= item.threshold ? 'Low stock' : 'In stock'}</span></td><td><form className="inline-stock-form" onSubmit={(event) => adjustInventory(event, item)}><select name="action" aria-label="Stock movement"><option value="addition">Add</option><option value="reduction">Reduce</option></select><input name="quantity" type="number" min="1" required placeholder="Units" /><button className="icon-button" aria-label={`Save stock adjustment for ${item.name}`}><ArrowUp size={16} /></button></form></td></tr>)}
+      {data.products.map((item) => <tr key={item.id}><td><b>{item.name}</b></td><td>{item.sku}</td><td>{item.stock}</td><td>{item.threshold}</td><td><span className={`table-status ${item.stock === 0 ? 'inactive' : item.stock <= item.threshold ? 'warning' : 'active'}`}>{item.stock === 0 ? 'Out of stock' : item.stock <= item.threshold ? 'Low stock' : 'In stock'}</span></td><td><form className="inline-stock-form" onSubmit={(event) => adjustInventory(event, item)}><select name="action" aria-label="Stock movement"><option value="addition">Add</option><option value="reduction">Reduce</option></select><input name="quantity" type="number" min="1" required placeholder="Units" /><button className="icon-button" aria-label={`Save stock adjustment for ${item.name}`} title="Apply stock adjustment"><ArrowUp size={16} /></button></form></td></tr>)}
       {!data.products.length && <tr><td colSpan="6"><EmptyState title="No inventory found" /></td></tr>}
     </tbody></table></div></section>
     <section className="panel movement-panel"><PanelTitle eyebrow="AUDIT TRAIL" title="Recent movements" />{data.movements.slice(0, 15).map((move) => <div className="staff-list-row" key={move.id}><span><b>{move.product}</b><small>{move.note || move.action} · {move.user || 'System'} · {new Date(move.createdAt).toLocaleString()}</small></span><strong className={move.quantity > 0 ? 'positive-text' : 'stock-warning'}>{move.quantity > 0 ? '+' : ''}{move.quantity}</strong></div>)}</section>
@@ -424,7 +424,16 @@ function OrderRow({ order, staff = false, onStatus }) {
       <strong>{money(order.total)}</strong>
       {staff && (allowedNext || ['pending', 'confirmed'].includes(order.status) ? allowedNext : null)}
       {staff && ['pending', 'confirmed'].includes(order.status) && (
-        <button className="cancel-order" onClick={() => onStatus(order, 'cancelled')}>Cancel</button>
+        <button
+          className="cancel-order"
+          onClick={() => {
+            if (window.confirm(`Cancel order #${order.number}? Deducted inventory will be restored.`)) {
+              onStatus(order, 'cancelled')
+            }
+          }}
+        >
+          Cancel
+        </button>
       )}
     </div>
   )

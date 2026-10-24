@@ -425,6 +425,9 @@ function App() {
   }
 
   const cancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order? Any deducted stock will be immediately restored.')) {
+      return
+    }
     try {
       await api(`/orders/${orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'cancelled' }) })
       await reload()
@@ -669,6 +672,7 @@ function App() {
               <button className="profile-link" onClick={() => navigateTo(isStaff ? 'settings' : 'profile')}>
                 <span className="avatar">{user.name.slice(0, 1).toUpperCase()}</span>
                 <span className="account-name">{user.name.split(' ')[0]}</span>
+                <span className={`role-badge role-${user.role}`}>{user.role}</span>
               </button>
               <button className="icon-button signout" aria-label="Sign out" title="Sign out" onClick={signOut}>
                 <LogOut size={17} />
@@ -819,7 +823,22 @@ function App() {
                   ))}
                 </div>
               ) : (
-                <div className="empty-state"><Package size={28} /><h3>No products found</h3><p>Try another search or category.</p></div>
+                <div className="empty-state">
+                  <Package size={28} />
+                  <h3>No products found</h3>
+                  <p>Try clearing filters or adjusting your search criteria.</p>
+                  <button className="secondary-button" onClick={() => {
+                    setQuery('')
+                    setCategory('')
+                    setSupplier('')
+                    setMinimum('')
+                    setMaximum('')
+                    setAvailable(false)
+                    setStatusFilter('active')
+                  }}>
+                    Reset all filters
+                  </button>
+                </div>
               )}
             </section>
           </>
@@ -1553,6 +1572,7 @@ function App() {
                     <button
                       className={account.active ? 'status-toggle enabled' : 'status-toggle'}
                       disabled={account.id === user.id}
+                      title={account.id === user.id ? 'Self-lockout safeguard: You cannot deactivate your own account' : `Click to ${account.active ? 'deactivate' : 'activate'}`}
                       onClick={() => changeAccount(account, 'active', !account.active)}
                     >
                       {account.active ? 'Active' : 'Inactive'}
