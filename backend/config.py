@@ -53,7 +53,7 @@ class Config:
         origin.strip()
         for origin in os.getenv(
             "CORS_ORIGINS",
-            "https://stockflow-inventory-order-management.vercel.app,http://localhost:5173,http://localhost:5177,http://127.0.0.1:5173,http://127.0.0.1:5177",
+            "https://stockflow-inventory-order-managemen.vercel.app,https://stockflow-inventory-order-management.vercel.app,http://localhost:5173,http://localhost:5177,http://127.0.0.1:5173,http://127.0.0.1:5177",
         ).split(",")
         if origin.strip()
     ]

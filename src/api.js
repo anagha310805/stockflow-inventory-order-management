@@ -3,14 +3,22 @@ export const API_ROOT = rawApiRoot.endsWith('/api') ? rawApiRoot.slice(0, -4) : 
 
 export async function api(path, options = {}) {
   const token = localStorage.getItem('stockflow-token')
-  const response = await fetch(`${API_ROOT}/api${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  })
+  let response
+  try {
+    response = await fetch(`${API_ROOT}/api${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    })
+  } catch (err) {
+    if (err instanceof TypeError && (err.message.includes('fetch') || err.message.includes('NetworkError'))) {
+      throw new Error('Unable to connect to the StockFlow server. Please check your network connection or verify that the API server is online and CORS is configured.')
+    }
+    throw err
+  }
   const body = await response.json().catch(() => ({}))
   if (!response.ok) {
     if (response.status === 401 && token

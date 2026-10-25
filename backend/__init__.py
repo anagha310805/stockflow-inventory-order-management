@@ -25,8 +25,11 @@ def create_app(test_config=None):
     if not app.config.get("SQLALCHEMY_DATABASE_URI"):
         raise RuntimeError("Set DATABASE_URL or MYSQL_USER and MYSQL_PASSWORD before starting StockFlow.")
     db.init_app(app)
-    origins = app.config["CORS_ORIGINS"]
-    CORS(app, origins=origins if isinstance(origins, list) else [origins])
+    raw_origins = app.config["CORS_ORIGINS"]
+    configured_origins = raw_origins if isinstance(raw_origins, list) else [raw_origins]
+    vercel_pattern = re.compile(r"^https://[a-zA-Z0-9\-_]+\.vercel\.app$")
+    cors_origins = [vercel_pattern] + [o for o in configured_origins if isinstance(o, str)]
+    CORS(app, origins=cors_origins, supports_credentials=True)
     serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"], salt="stockflow-auth")
 
     def error(message, status=400):

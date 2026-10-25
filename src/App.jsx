@@ -801,7 +801,22 @@ function App() {
                 <label className="price-filter"><span>₹</span><input aria-label="Minimum price" type="number" min="0" placeholder="Min" value={minimum} onChange={(event) => setMinimum(event.target.value)} /><i /> <input aria-label="Maximum price" type="number" min="0" placeholder="Max" value={maximum} onChange={(event) => setMaximum(event.target.value)} /></label>
                 <label className="availability-toggle"><input type="checkbox" checked={available} onChange={(event) => setAvailable(event.target.checked)} /><span className="toggle-track" /><span>In stock only</span></label>
               </div>
-              {products.length ? (
+              {busy && !products.length ? (
+                <div className="empty-state">
+                  <div className="loading-spinner" />
+                  <h3>Loading catalog...</h3>
+                  <p>Fetching the latest products and inventory records.</p>
+                </div>
+              ) : error && !products.length ? (
+                <div className="empty-state error-empty-state">
+                  <CircleAlert size={32} />
+                  <h3>Unable to load catalog</h3>
+                  <p>{error}</p>
+                  <button className="primary-button" onClick={() => reload()}>
+                    Retry Connection
+                  </button>
+                </div>
+              ) : products.length ? (
                 <div className="product-grid">
                   {products.map((item) => (
                     <article className="product-card" key={item.id}>
