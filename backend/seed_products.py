@@ -17,6 +17,23 @@ def seed_sample_products(app=None):
     """
     target_app = app or create_app()
     with target_app.app_context():
+        # Display safe, masked database connection info
+        safe_url = db.engine.url.render_as_string(hide_password=True)
+        is_cloud = "127.0.0.1" not in safe_url and "localhost" not in safe_url
+        print(f"Connected to database: {safe_url}")
+        if is_cloud:
+            print(">> Target: Remote Cloud Production Database (TiDB Cloud)")
+        else:
+            print(">> Target: Local Database")
+
+        # Test connection
+        try:
+            with db.engine.connect() as conn:
+                pass
+        except Exception as e:
+            print(f"ERROR: Could not establish connection to the database: {e}")
+            sys.exit(1)
+
         # Ensure schema tables exist safely
         db.create_all()
 

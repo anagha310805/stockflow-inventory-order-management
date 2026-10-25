@@ -1,3 +1,4 @@
+import getpass
 import os
 import sys
 from dotenv import load_dotenv
@@ -12,11 +13,28 @@ from backend.models import db, User
 def init_admin(email=None, password=None, name=None, phone=None, app=None):
     """
     Explicitly runnable, idempotent script to initialize the primary Administrator account.
-    Reads from arguments or environment variables (ADMIN_EMAIL, ADMIN_PASSWORD / INITIAL_ADMIN_PASSWORD).
+    Reads from arguments, environment variables, or prompts interactively.
     Does NOT overwrite or reset existing accounts.
     """
     target_app = app or create_app()
     with target_app.app_context():
+        # Display safe, masked database connection info
+        safe_url = db.engine.url.render_as_string(hide_password=True)
+        is_cloud = "127.0.0.1" not in safe_url and "localhost" not in safe_url
+        print(f"Connected to database: {safe_url}")
+        if is_cloud:
+            print(">> Target: Remote Cloud Production Database (TiDB Cloud)")
+        else:
+            print(">> Target: Local Database")
+
+        # Test connection
+        try:
+            with db.engine.connect() as conn:
+                pass
+        except Exception as e:
+            print(f"ERROR: Could not establish connection to the database: {e}")
+            sys.exit(1)
+
         # Ensure schema tables exist safely
         db.create_all()
 
@@ -25,12 +43,20 @@ def init_admin(email=None, password=None, name=None, phone=None, app=None):
         target_name = name or os.getenv("ADMIN_NAME", "StockFlow Administrator")
         target_phone = phone or os.getenv("ADMIN_PHONE", "+91 98765 00001")
 
+        # Fallback to interactive input if running in terminal and missing
+        if not target_email and sys.stdin and sys.stdin.isatty():
+            prompt_email = input("Enter Administrator email [admin@stockflow.com]: ").strip()
+            target_email = prompt_email if prompt_email else "admin@stockflow.com"
+
+        if not target_password and sys.stdin and sys.stdin.isatty():
+            target_password = getpass.getpass("Enter Administrator password (min 8 characters): ").strip()
+
         if not target_email:
-            print("ERROR: Administrator email is missing. Set ADMIN_EMAIL or INITIAL_ADMIN_EMAIL, or pass as first argument.", file=sys.stderr)
+            print("ERROR: Administrator email is missing. Set ADMIN_EMAIL or pass as first argument.", file=sys.stderr)
             sys.exit(1)
 
         if not target_password:
-            print("ERROR: Administrator password is missing. Set ADMIN_PASSWORD or INITIAL_ADMIN_PASSWORD, or pass as second argument.", file=sys.stderr)
+            print("ERROR: Administrator password is missing. Set ADMIN_PASSWORD or pass as second argument.", file=sys.stderr)
             sys.exit(1)
 
         target_email = target_email.strip().lower()
