@@ -49,11 +49,17 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = engine_options()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TOKEN_MAX_AGE = int(os.getenv("TOKEN_MAX_AGE", "43200"))
-    CORS_ORIGINS = [
+    _DEFAULT_CORS_ORIGINS = [
+        "https://stockflow-inventory-order-managemen.vercel.app",
+        "https://stockflow-inventory-order-management.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:5177",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5177",
+    ]
+    _ENV_CORS_ORIGINS = [
         origin.strip()
-        for origin in os.getenv(
-            "CORS_ORIGINS",
-            "https://stockflow-inventory-order-managemen.vercel.app,https://stockflow-inventory-order-management.vercel.app,http://localhost:5173,http://localhost:5177,http://127.0.0.1:5173,http://127.0.0.1:5177",
-        ).split(",")
+        for origin in os.getenv("CORS_ORIGINS", "").split(",")
         if origin.strip()
     ]
+    CORS_ORIGINS = list(dict.fromkeys(_ENV_CORS_ORIGINS + _DEFAULT_CORS_ORIGINS)) if _ENV_CORS_ORIGINS else _DEFAULT_CORS_ORIGINS

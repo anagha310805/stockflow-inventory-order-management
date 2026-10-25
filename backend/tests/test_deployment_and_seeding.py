@@ -47,13 +47,18 @@ def test_cors_preflight_and_deployed_origins(clean_app):
     assert r3.status_code == 200
     assert r3.headers.get('Access-Control-Allow-Origin') == 'https://stockflow-preview-pr-12.vercel.app'
 
-    # 4. OPTIONS preflight
-    opt = client.options('/api/products', headers={
-        'Origin': 'https://stockflow-inventory-order-managemen.vercel.app',
-        'Access-Control-Request-Method': 'GET'
-    })
-    assert opt.status_code == 200
-    assert opt.headers.get('Access-Control-Allow-Origin') == 'https://stockflow-inventory-order-managemen.vercel.app'
+    # 4. OPTIONS preflight with Content-Type and Authorization headers
+    for path in ['/api/products', '/api/categories', '/api/suppliers']:
+        opt = client.options(path, headers={
+            'Origin': 'https://stockflow-inventory-order-managemen.vercel.app',
+            'Access-Control-Request-Method': 'GET',
+            'Access-Control-Request-Headers': 'Content-Type, Authorization',
+        })
+        assert opt.status_code == 200
+        assert opt.headers.get('Access-Control-Allow-Origin') == 'https://stockflow-inventory-order-managemen.vercel.app'
+        allow_headers = opt.headers.get('Access-Control-Allow-Headers', '')
+        assert 'Authorization' in allow_headers or 'authorization' in allow_headers
+        assert 'Content-Type' in allow_headers or 'content-type' in allow_headers
 
 
 def test_empty_catalog_and_products_route(clean_app):
