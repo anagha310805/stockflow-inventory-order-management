@@ -9,7 +9,7 @@ from backend import create_app
 from backend.models import db, Category, Supplier, Product, InventoryMovement
 
 
-def seed_sample_products(app=None):
+def seed_sample_products(app=None, require_remote=False):
     """
     Explicitly runnable, idempotent seed script that populates exactly five realistic
     sample products and their required categories and suppliers.
@@ -20,18 +20,31 @@ def seed_sample_products(app=None):
         # Display safe, masked database connection info
         safe_url = db.engine.url.render_as_string(hide_password=True)
         is_cloud = "127.0.0.1" not in safe_url and "localhost" not in safe_url
-        print(f"Connected to database: {safe_url}")
-        if is_cloud:
-            print(">> Target: Remote Cloud Production Database (TiDB Cloud)")
-        else:
-            print(">> Target: Local Database")
+        target_host = f"{db.engine.url.host}:{db.engine.url.port}"
+        target_schema = db.engine.url.database
+
+        print("=" * 65)
+        print("StockFlow Product Seeder")
+        print("=" * 65)
+        print(f"Target Database : {safe_url}")
+        print(f"Target Host     : {target_host}")
+        print(f"Target Schema   : {target_schema}")
+        print(f"Environment     : {'Remote Cloud Production (TiDB Cloud)' if is_cloud else 'Local Database (127.0.0.1)'}")
+        print(f"TLS / SSL       : {'Enabled' if is_cloud else 'Disabled / Local'}")
+        print("-" * 65)
+
+        if require_remote and not is_cloud:
+            print("ERROR: Remote TiDB Cloud database was requested (--tidb), but connected to local host (127.0.0.1)!", file=sys.stderr)
+            print("Aborting immediately. Zero database writes were performed.", file=sys.stderr)
+            print("Please set $env:DATABASE_URL in this PowerShell session and retry.", file=sys.stderr)
+            sys.exit(1)
 
         # Test connection
         try:
             with db.engine.connect() as conn:
                 pass
         except Exception as e:
-            print(f"ERROR: Could not establish connection to the database: {e}")
+            print(f"ERROR: Could not establish connection to the database: {e}", file=sys.stderr)
             sys.exit(1)
 
         # Ensure schema tables exist safely
@@ -164,4 +177,5 @@ def seed_sample_products(app=None):
 
 
 if __name__ == "__main__":
-    seed_sample_products()
+    require_remote = "--tidb" in sys.argv or "--require-remote" in sys.argv or os.getenv("REQUIRE_REMOTE") == "1"
+    seed_sample_products(require_remote=require_remote)
